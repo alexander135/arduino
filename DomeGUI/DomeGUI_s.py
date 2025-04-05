@@ -74,6 +74,8 @@ if az >= 360:
 elif az <= 0:
     az += 360
 az_graph=az_relay+90-az
+global is_right_on
+is_right_on = False
 
 # r -вращение вправо
 # l -вращение влево
@@ -86,19 +88,13 @@ az_graph=az_relay+90-az
 # x -выключить ведение
 
 def btn_right_click():
-    global az, az_relay, az_graph
-    ser.write(b'r')
-    az += 5
-    az_graph -= 5
-    if az >= 360:
-        az -= 360
-    c.itemconfig(sector, start = (az_graph-20))
-    c.itemconfig(azimut_label, text=(str(az)+chr(176)))
-    if az == az_relay:
-        c.itemconfig(line_0, fill=i_on)
+    global az, az_relay, az_graph, is_right_on
+    is_right_on = not is_right_on
+    if is_right_on:
+        btn_right.configure(bg=button_on)
     else:
-        c.itemconfig(line_0, fill=bg_dome)
-    return az
+        btn_right.configure(bg=bg_button)
+    return None
 
 def btn_left_click():
     global az, az_relay, az_graph
@@ -208,7 +204,8 @@ btn_open = Button(window, image=img_open, command=btn_open_click, bg=bg_button).
 btn_close = Button(window, image=img_close, command=btn_close_click,bg=bg_button).place(x=60, y=30, width = 48, height = 48)
 
 btn_left = Button(window, image=img_left, command=btn_left_click, bg=bg_button).place(x=10, y=90, width = 48, height = 48)
-btn_right = Button(window, image=img_right, command=btn_right_click, bg=bg_button).place(x=60, y=90, width = 48, height = 48)
+btn_right = Button(window, image=img_right, command=btn_right_click, bg=bg_button)
+btn_right.place(x=60, y=90, width = 48, height = 48)
 btn_run = Button(window, image=img_run, command=btn_run_click,bg=bg_button)
 btn_run.place(x=130, y=90, width = 48, height = 48)
 if run_On:
@@ -261,6 +258,24 @@ c.create_text(120+int(cos(radians(az_relay+180))*108), 120-int(sin(radians(az_re
 c.create_text(120+int(cos(radians(az_relay+90))*108), 120-int(sin(radians(az_relay+90))*108), text="N", fill="white", font="Arial 12")      # N
 c.create_text(120+int(cos(radians(az_relay))*108), 120-int(sin(radians(az_relay))*108), text="E", fill="white", font="Arial 12")            # E
 
+def turn_right():
+    global is_right_on, az, az_graph, az_relay
+    if is_right_on:
+        ser.write(b'r')
+        az += 5
+        az_graph -= 5
+        if az >= 360:
+            az -= 360
+        c.itemconfig(sector, start = (az_graph-20))
+        c.itemconfig(azimut_label, text=(str(az)+chr(176)))
+        if az == az_relay:
+            c.itemconfig(line_0, fill=i_on)
+        else:
+            c.itemconfig(line_0, fill=bg_dome)
+    window.after(1000, turn_right)
+
+
+window.after(1000, turn_right)
 window.mainloop()
 
 
